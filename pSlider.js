@@ -75,7 +75,14 @@ pSlider.prototype = {
             return ;
         }
         var ani = "@-webkit-keyframes start {0%, 30% {opacity: 0;transform: translateY(10px);} 60% {opacity: 1;transform: translate(0);} 100% {opacity: 0;transform: translateY(-12px);}}";
-        document.getElementsByTagName("style")[0].append(ani);
+
+        if(document.getElementsByTagName("style").length){
+            document.getElementsByTagName("style")[0].innerHTML += ani;
+        }else{
+            var style = document.createElement("style");
+            style.innerHTML = ani;
+            document.getElementsByTagName("head")[0].appendChild(style);
+        }
 
         this.wrapper.style.cssText += "; position: absolute;width: 100%;height: 100%;overflow: hidden;background: #fff;";
         this.displayHeight = this.wrapper.clientHeight;
@@ -189,11 +196,14 @@ pSlider.prototype = {
                     this.pageList[this.nextPage].style.cssText += this.getTransform(this.displayHeight) + "transition:none;";
                 }
             }
-
+            //普通页滑动限制
             if(bans === "noNext" || bans === "both"){
                 this.pageList[index].lastChild.style.visibility = "hidden";
             }
-
+            //最后一页滑动图标限制
+            if(this.nextPage === this.pageListLength - 1 && !this.config.canLoopPlay){
+                this.pageList[index].lastChild.style.visibility = "hidden";
+            }
             this.setActive(this.pageList[this.nextPage]);
 
             setTimeout(function () {

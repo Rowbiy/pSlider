@@ -4,15 +4,15 @@
  * @param  conf
  * @author Rowbiy
  * @date   2017-10-28
- * @param  conf.wrapper='#ps-wrapper' 容器
- * @param  conf.mainPage='.main-page'  滚动单元的元素
- * @param  conf.startIndex=0 设置初始显示的页码
- * @param  conf.speed=350 动画速度 单位:ms
- * @param  conf.triggerDist=0.15 触发自滑动的手指移动最小百分比
- * @param  conf.canLoopPlay=true 是否允许循环滑动，默认允许
+ * @param  conf.wrapper='#ps-wrapper'   容器
+ * @param  conf.mainPage='.main-page'   滚动单元的元素
+ * @param  conf.startIndex=0            设置初始显示的页码
+ * @param  conf.speed=350               动画速度 单位:ms
+ * @param  conf.triggerDist=0.15        触发自滑动的手指移动最小百分比
+ * @param  conf.canLoopPlay=true        是否允许循环滑动，默认允许
  *
  * //极简用法
- * new pSlider(); //容器默认是 #ps-wrapper  元素默认是 .main-page
+ * new pSlider();                       //容器默认是 #ps-wrapper  元素默认是 .main-page
  *
  * //一般用法
  * var ps = new pSlider({
@@ -42,7 +42,7 @@ function pSlider(conf) {
         noSlides:{},             //不允许滑动的页面,noPrev表示不允许下滑去上一页，noNext表示不允许上滑去下一页，both表示上下滑均不可
         turnDirection:"vertical",//翻页方向 垂直-vertical 水平-horizontal
         hasLastPage: false,      //是否显示尾页，默认显示
-        hasProgressBar: true,    //是否显示进度条，默认显示
+        hasProgressBar: false,   //是否显示进度条，默认显示
         turnEffect:"normal"      //翻页效果，默认普通
     };
     for (var i in conf) {
@@ -107,7 +107,7 @@ pSlider.prototype = {
     },
     initLastPage: function () {
         var lastPage = document.createElement("section");
-        lastPage.className = "main-p";
+        lastPage.className = "edit-page-box";
         lastPage.style.cssText += "; display:none;z-index:1;position: absolute;width:100%;height:100%;background:#faf !important;";
         var text = document.createElement("div");
         text.innerText = "大家好，我是结尾logo页面！";
@@ -136,7 +136,10 @@ pSlider.prototype = {
         this.upIconPosition = this.displayHeight - 40;
         this.rightIconPosition = this.displayHeight / 2 - 10;
         for (var i = 0; i < this.pageListLength; i++) {
-            this.pageList[i].style.cssText += '; display:none;position:absolute;height:100%;overflow:hidden;width:100%;z-index: 1;background:#fff';
+            this.pageList[i].style.cssText += '; display:none;position:absolute;height:100%;overflow:hidden;width:100%;z-index: 1;background:#fff;-webkit-backface-visibility:hidden;';
+            if(this.isLongPage(this.currentIndex)){
+                this.pageList[i].children[0].style.cssText += '; -webkit-backface-visibility:hidden;';
+            }
             var tipDiv = document.createElement("div");
             var tipLeft = document.createElement("span");
             var tipRight = tipLeft.cloneNode(false);
@@ -244,7 +247,7 @@ pSlider.prototype = {
                     setTimeout(function () {
                         _that.pageList[_that.nextPage].style.cssText += _that.doMove(0) + _that.getTransition();
                         _that.pageList[_that.currentIndex].style.cssText += _that.transformCurrentPage(_that.displayHeight * 0.18, "y", _that.config.speed);
-                    },5);
+                    },50);
                     break;
                 case "horizontal":
                     if(typeof slideDirection !== "undefined"){ //点击跳转到下一页事件
@@ -270,7 +273,7 @@ pSlider.prototype = {
                     setTimeout(function () {
                         _that.pageList[_that.nextPage].style.cssText += _that.doMove(0, "x") + _that.getTransition();
                         _that.pageList[_that.currentIndex].style.cssText += _that.transformCurrentPage(_that.displayWidth * 0.18, "x", _that.config.speed);
-                    },5);
+                    },50);
                     break;
             }
             this.slideFinish();
@@ -305,7 +308,7 @@ pSlider.prototype = {
                 _that.progressBar.firstChild.style.cssText += "; width:" + _that.displayWidth * (_that.currentIndex + 1) / _that.pageListLength + "px;";
                 _that.progressBar.lastChild.innerText = (_that.currentIndex + 1) + "/" + _that.pageListLength;
             }
-        },this.config.speed);
+        },this.config.speed + 75);
     },
     resetPageAnimations: function (pageId) {
         if (typeof as === "object" && as) {
@@ -322,16 +325,17 @@ pSlider.prototype = {
         if (typeof as === "object" && as) {
             for (var tmp in as){
                 var ele = "#"+tmp;
-                if (!jQuery._data($(ele), 'events') || !jQuery._data($(ele), 'events')['webkitAnimationEnd']) {
-                    $(ele).on('webkitAnimationEnd', function () {
-                        var myId = $(this).attr('id');
+                !function (ele) {
+                    var eleChild = $(ele).children().eq(0);
+                    $(eleChild).on('webkitAnimationEnd', function () {
+                        var myId = $(ele).attr('id');
                         var alreadyPlayed = that.animationPlayed[myId];
                         if(as[myId][alreadyPlayed + 1]){
                             that.addAnimation(myId, alreadyPlayed + 1);
                             that.animationPlayed[myId] = alreadyPlayed + 1;
                         }
-                    })
-                }
+                    });
+                }(ele);
                 this.addAnimation(tmp, 0);
             }
         }
@@ -346,7 +350,8 @@ pSlider.prototype = {
             } else {
                 animationStr = animation[1] + ' ' + animation[2] + 's ease ' + animation[3] + 's ' + animation[4] + ' normal both'
             }
-            $("#" + eleId).css('-webkit-animation', animationStr);
+            var eleChild = $("#" + eleId).children().eq(0);
+            $(eleChild).css('-webkit-animation', animationStr);
             this.animationPlayed[eleId] = index;
         }
     },
@@ -485,7 +490,7 @@ pSlider.prototype = {
         this.pageList[this.currentIndex].children[0].style.cssText += this.doMove(cld) + "transition: -webkit-transform " + finishTime + "ms ease-out";
         setTimeout(function () {
             that.longPageInScrolling = false;
-        }, finishTime);
+        }, finishTime / 2);
 
     },
     touchEnd: function () {
@@ -587,6 +592,7 @@ pSlider.prototype = {
                             this.pageList[this.currentIndex].style.cssText += this.transformCurrentPage(this.displayHeight + this.deltaY);
                         }
                     }
+                    this.longPageWantTurn = null;
                 }
                 else if(this.deltaY >= 0){//往下滑，去上一页
                     if(this.currentIndex - 1 < 0){ //已经是第一张
@@ -629,6 +635,7 @@ pSlider.prototype = {
                             this.pageList[this.currentIndex].style.cssText += this.transformCurrentPage(-(this.displayHeight - this.deltaY));
                         }
                     }
+                    this.longPageWantTurn = null;
                 }
                 break;
             case "horizontal":

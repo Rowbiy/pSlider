@@ -5,3 +5,7 @@
 .idea/pSlider.iml
 .idea/preferred-vcs.xml
 .idea/workspace.xml
+.DS_Store
+.idea/deployment.xml
+.idea/vcs.xml
+.idea/webServers.xml
